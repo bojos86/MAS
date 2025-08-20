@@ -1,10 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mas.app">
+    package="com.malsayed.mas">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
 
     <application
         android:name="${applicationName}"
+        android:label="MAS"
         android:icon="@mipmap/ic_launcher"
-        android:label="MAS">
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
@@ -19,12 +24,6 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="io.flutter.embedding.android.NormalTheme"
-            android:resource="@style/NormalTheme"/>
-
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="2"/>
+        <meta-data android:name="flutterEmbedding" android:value="2"/>
     </application>
 </manifest>
