@@ -1,4 +1,4 @@
-name: Build Flutter APK (Release with Debug Fallback)
+name: Build Flutter APK (strict, auto-migrate)
 
 on:
   push:
@@ -7,10 +7,6 @@ on:
 
 permissions:
   contents: read
-
-concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -36,32 +32,24 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Flutter doctor (for logs)
+      - name: Flutter doctor
         run: flutter doctor -v
 
       - name: Pub get
         run: flutter pub get
 
-      # أحيانًا ينظف مشاكل Gradle/SDK
+      # يحدّث قالب أندرويد للـ v2 تلقائياً
+      - name: Migrate Android project to latest template (safe)
+        run: flutter create --platforms=android .
+
       - name: Gradle clean
         run: ./android/gradlew -p android clean || true
 
-      # ====== Build Release (مع لوج تفصيلي) ======
-      - name: Build APK (release, split per ABI)
-        run: |
-          set -e
-          flutter build apk --release --split-per-abi -v || true
-          echo "=== Done release build step (errors ignored to allow logs upload) ==="
+      # جرّب إصدار واحد أولاً بدون split
+      - name: Build APK (release)
+        run: flutter build apk --release -v
 
-      # اطبع أي لوجات أنشأها Flutter أثناء الـbuild
-      - name: Show Flutter build logs (if any)
-        if: always()
-        run: |
-          echo "=== Try to print flutter_* logs ==="
-          find . -maxdepth 2 -type f -name "flutter_*.log" -print -exec sh -c 'echo "-----"; echo ">> {}"; echo "-----"; tail -n +1 "{}"' \; || true
-
-      # اعرض شجرة المخرجات لتشخيص المسارات
-      - name: List outputs (for debugging)
+      - name: List outputs
         if: always()
         run: |
           echo "=== build/app/outputs ==="
@@ -69,24 +57,11 @@ jobs:
           echo "=== android/app/build/outputs ==="
           ls -R android/app/build/outputs || true
 
-      # ====== Fallback: جرّب Debug إذا ما طلعت APKs ======
-      - name: Fallback build (debug) if no APKs found
-        run: |
-          if ! ls build/app/outputs/flutter-apk/*.apk >/dev/null 2>&1 && \
-             ! ls android/app/build/outputs/apk/**/*.apk >/dev/null 2>&1; then
-            echo "No release APKs found. Building DEBUG as fallback..."
-            flutter build apk --debug -v || true
-            echo "=== Debug build finished (errors ignored to allow artifact upload) ==="
-          else
-            echo "Release APKs exist. Skipping debug fallback."
-          fi
-
-      # ارفع أي APK يجدها (Release أو Debug أو Gradle)
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: MAS-APK
-          if-no-files-found: warn
           path: |
             build/app/outputs/flutter-apk/*.apk
             android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
