@@ -1,48 +1,45 @@
 plugins {
-    id "com.android.application"
-    id "kotlin-android"
+  id "com.android.application"
+  id "kotlin-android"
+  id "dev.flutter.flutter-plugin-loader"
 }
+
+def flutterVersionCode = project.hasProperty('flutter.versionCode') ? project.getProperty('flutter.versionCode') : '1'
+def flutterVersionName = project.hasProperty('flutter.versionName') ? project.getProperty('flutter.versionName') : '1.0'
 
 android {
-    namespace "com.mas.app"
-    compileSdk 34
+  namespace "com.malsayed.mas"
+  compileSdkVersion 34
 
-    defaultConfig {
-        applicationId "com.mas.app"
-        minSdk 21
-        targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
-        multiDexEnabled true
-    }
+  defaultConfig {
+    applicationId "com.malsayed.mas"
+    minSdkVersion 23
+    targetSdkVersion 34
+    versionCode flutterVersionCode.toInteger()
+    versionName flutterVersionName
+    multiDexEnabled true
+  }
 
-    buildTypes {
-        release {
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-            shrinkResources false
-        }
-        debug {
-            debuggable true
-        }
-    }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlinOptions { jvmTarget = '17' }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+  buildTypes {
+    release {
+      signingConfig signingConfigs.debug
+      minifyEnabled false
+      shrinkResources false
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    debug { debuggable true }
+  }
 
-    packagingOptions {
-        resources {
-            excludes += [ "META-INF/*" ]
-        }
-    }
+  packagingOptions {
+    resources { excludes += ["/META-INF/{AL2.0,LGPL2.1}"] }
+  }
 }
 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
-    implementation "androidx.multidex:multidex:2.0.1"
-}
+dependencies { implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22" }
+
+flutter { source '../..' }
