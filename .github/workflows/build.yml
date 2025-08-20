@@ -1,67 +1,38 @@
-name: Build Flutter APK (strict, auto-migrate)
+name: Build Flutter APK (Release)
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.jvmargs='-Xmx4g -Dfile.encoding=UTF-8'"
-      JAVA_TOOL_OPTIONS: "-Xmx4g"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 17 (Temurin)
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
+          distribution: temurin
+          java-version: "17"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: "3.35.1"
+          channel: "stable"
           cache: true
 
-      - name: Flutter doctor
-        run: flutter doctor -v
-
-      - name: Pub get
+      - name: Flutter Pub Get
         run: flutter pub get
 
-      # يحدّث قالب أندرويد للـ v2 تلقائياً
-      - name: Migrate Android project to latest template (safe)
-        run: flutter create --platforms=android .
-
-      - name: Gradle clean
-        run: ./android/gradlew -p android clean || true
-
-      # جرّب إصدار واحد أولاً بدون split
-      - name: Build APK (release)
-        run: flutter build apk --release -v
-
-      - name: List outputs
-        if: always()
-        run: |
-          echo "=== build/app/outputs ==="
-          ls -R build/app/outputs || true
-          echo "=== android/app/build/outputs ==="
-          ls -R android/app/build/outputs || true
+      - name: Build APK (release, split per ABI)
+        run: flutter build apk --release --split-per-abi -v
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: MAS-APK
-          path: |
-            build/app/outputs/flutter-apk/*.apk
-            android/app/build/outputs/apk/**/*.apk
-          if-no-files-found: error
+          path: android/app/build/outputs/flutter-apk/*.apk
+          if-no-files-found: warn
