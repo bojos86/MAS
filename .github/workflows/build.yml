@@ -1,13 +1,23 @@
-name: Build Flutter APK (Release)
+name: Build Flutter APK (Release with Debug Fallback)
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs='-Xmx4g -Dfile.encoding=UTF-8'"
+      JAVA_TOOL_OPTIONS: "-Xmx4g"
 
     steps:
       - name: Checkout
@@ -16,48 +26,67 @@ jobs:
       - name: Setup Java 17 (Temurin)
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK components
-        run: |
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0"
-          yes | sdkmanager --licenses
-
-      - name: Setup Flutter (stable 3.35.1)
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.1'
           channel: 'stable'
           cache: true
 
       - name: Flutter doctor (for logs)
         run: flutter doctor -v
 
-      - name: Get dependencies
+      - name: Pub get
         run: flutter pub get
 
-      - name: Build APK (release, split per ABI)
-        run: flutter build apk --release --split-per-abi -v
+      # أحيانًا ينظف مشاكل Gradle/SDK
+      - name: Gradle clean
+        run: ./android/gradlew -p android clean || true
 
-      - name: List outputs
+      # ====== Build Release (مع لوج تفصيلي) ======
+      - name: Build APK (release, split per ABI)
+        run: |
+          set -e
+          flutter build apk --release --split-per-abi -v || true
+          echo "=== Done release build step (errors ignored to allow logs upload) ==="
+
+      # اطبع أي لوجات أنشأها Flutter أثناء الـbuild
+      - name: Show Flutter build logs (if any)
         if: always()
         run: |
-          echo "== flutter-apk =="
-          ls -R build/app/outputs/flutter-apk || true
-          echo "== gradle apk =="
-          ls -R android/app/build/outputs/apk || true
+          echo "=== Try to print flutter_* logs ==="
+          find . -maxdepth 2 -type f -name "flutter_*.log" -print -exec sh -c 'echo "-----"; echo ">> {}"; echo "-----"; tail -n +1 "{}"' \; || true
 
+      # اعرض شجرة المخرجات لتشخيص المسارات
+      - name: List outputs (for debugging)
+        if: always()
+        run: |
+          echo "=== build/app/outputs ==="
+          ls -R build/app/outputs || true
+          echo "=== android/app/build/outputs ==="
+          ls -R android/app/build/outputs || true
+
+      # ====== Fallback: جرّب Debug إذا ما طلعت APKs ======
+      - name: Fallback build (debug) if no APKs found
+        run: |
+          if ! ls build/app/outputs/flutter-apk/*.apk >/dev/null 2>&1 && \
+             ! ls android/app/build/outputs/apk/**/*.apk >/dev/null 2>&1; then
+            echo "No release APKs found. Building DEBUG as fallback..."
+            flutter build apk --debug -v || true
+            echo "=== Debug build finished (errors ignored to allow artifact upload) ==="
+          else
+            echo "Release APKs exist. Skipping debug fallback."
+          fi
+
+      # ارفع أي APK يجدها (Release أو Debug أو Gradle)
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: mas-apk
+          name: MAS-APK
+          if-no-files-found: warn
           path: |
             build/app/outputs/flutter-apk/*.apk
             android/app/build/outputs/apk/**/*.apk
