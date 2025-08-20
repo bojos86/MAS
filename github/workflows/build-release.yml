@@ -1,4 +1,4 @@
-name: Android APK
+name: Build Flutter APK (Release)
 
 on:
   push:
@@ -8,30 +8,43 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-      - uses: subosito/flutter-action@v2
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.35.1'
+          flutter-version: "3.22.3"  # أو اتركه بدون هذا السطر ليأخذ آخر ثابت
 
-      - run: flutter pub get
-      - run: flutter build apk --release -v
+      - name: Flutter pub get
+        run: flutter pub get
 
-      - name: List outputs
+      - name: Build APK (release, split per ABI)
+        run: flutter build apk --release --split-per-abi -v
+
+      - name: List outputs (for debugging)
         if: always()
         run: |
+          echo "== flutter-apk =="
           ls -la build/app/outputs/flutter-apk || true
+          echo "== gradle apk =="
           ls -la android/app/build/outputs/apk || true
 
-      - name: Upload APK
+      - name: Upload APKs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mas-release-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          name: MAS-apks
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            android/app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
