@@ -1,0 +1,46 @@
+name: mas_app
+description: MAS – AI Mobile Banking (Android-first)
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.2
+  intl: ^0.19.0
+  http: ^1.2.2
+  path_provider: ^2.1.5
+  camera: ^0.11.2
+  google_mlkit_text_recognition: ^0.13.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.6
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/app_icon.png
+    - assets/splash_logo.png
+    - assets/app_banner.png
+
+flutter_icons:
+  android: true
+  ios: false
+  image_path: assets/app_icon.png
+  adaptive_icon_background: "#123D7A"
+  adaptive_icon_foreground: assets/app_icon.png
+
+flutter_native_splash:
+  color: "#123D7A"
+  image: assets/splash_logo.png
+  android: true
+  ios: false
+  android_gravity: center
