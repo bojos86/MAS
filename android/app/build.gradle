@@ -1,14 +1,16 @@
-apply plugin: "com.android.application"
-apply plugin: "kotlin-android"
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+}
 
 android {
-    namespace "com.mas.mas_ai_app"
+    namespace "com.mas.app"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.mas.mas_ai_app"
-        minSdkVersion 21
-        targetSdkVersion 34
+        applicationId "com.mas.app"
+        minSdk 21
+        targetSdk 34
         versionCode 1
         versionName "1.0.0"
         multiDexEnabled true
@@ -16,10 +18,13 @@ android {
 
     buildTypes {
         release {
+            signingConfig signingConfigs.debug
             minifyEnabled false
-            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            shrinkResources false
         }
-        debug { }
+        debug {
+            debuggable true
+        }
     }
 
     compileOptions {
@@ -27,22 +32,17 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = "17"
     }
 
     packagingOptions {
         resources {
-            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt',
-                         'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt',
-                         'META-INF/notice.txt', 'META-INF/ASL2.0']
+            excludes += [ "META-INF/*" ]
         }
     }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
-    implementation "androidx.core:core-ktx:1.12.0"
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "com.google.android.material:material:1.11.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
     implementation "androidx.multidex:multidex:2.0.1"
 }
