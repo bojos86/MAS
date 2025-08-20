@@ -1,45 +1,35 @@
 plugins {
-  id "com.android.application"
-  id "kotlin-android"
-  id "dev.flutter.flutter-plugin-loader"
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
 }
-
-def flutterVersionCode = project.hasProperty('flutter.versionCode') ? project.getProperty('flutter.versionCode') : '1'
-def flutterVersionName = project.hasProperty('flutter.versionName') ? project.getProperty('flutter.versionName') : '1.0'
 
 android {
-  namespace "com.malsayed.mas"
-  compileSdkVersion 34
+    namespace "com.mas.app"
+    compileSdk 34
 
-  defaultConfig {
-    applicationId "com.malsayed.mas"
-    minSdkVersion 23
-    targetSdkVersion 34
-    versionCode flutterVersionCode.toInteger()
-    versionName flutterVersionName
-    multiDexEnabled true
-  }
-
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
-  }
-  kotlinOptions { jvmTarget = '17' }
-
-  buildTypes {
-    release {
-      signingConfig signingConfigs.debug
-      minifyEnabled false
-      shrinkResources false
+    defaultConfig {
+        applicationId "com.mas.app"
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+        multiDexEnabled true
     }
-    debug { debuggable true }
-  }
 
-  packagingOptions {
-    resources { excludes += ["/META-INF/{AL2.0,LGPL2.1}"] }
-  }
+    buildTypes {
+        release {
+            // توقيع تلقائي من جريدل إذا أضفنا keystore لاحقًا
+            signingConfig signingConfigs.debug
+            shrinkResources false
+            minifyEnabled false
+        }
+        debug {
+            debuggable true
+        }
+    }
 }
 
-dependencies { implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22" }
-
-flutter { source '../..' }
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
+}
