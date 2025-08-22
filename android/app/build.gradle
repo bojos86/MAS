@@ -1,60 +1,12 @@
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
+buildTypes {
+    release {
+        // عطّل resource shrinking
+        shrinkResources false
+        minifyEnabled false
+
+        signingConfig signingConfigs.debug
     }
-}
-
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Add flutter.sdk to local.properties.")
-}
-
-apply plugin: "com.android.application"
-apply plugin: "kotlin-android"
-
-// ربط أدوات Flutter القديمة المستقرة
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
-android {
-    namespace "com.mas.app"
-    compileSdkVersion 34
-    ndkVersion "25.2.9519653" // اختياري، شِله إذا ما تحتاج NDK
-
-    defaultConfig {
-        applicationId "com.mas.app"
-        minSdkVersion 21
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
-
-        multiDexEnabled true
+    debug {
+        minifyEnabled false
     }
-
-    buildTypes {
-        release {
-            // لو ما عندك توقيع، استخدم shrinker الافتراضي بدون R8/Proguard
-            minifyEnabled false
-            signingConfig signingConfigs.debug
-        }
-        debug {
-            minifyEnabled false
-        }
-    }
-
-    packagingOptions {
-        resources {
-            excludes += ['META-INF/*']
-        }
-    }
-}
-
-flutter {
-    source '../..'
-}
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
-    implementation "androidx.multidex:multidex:2.0.1"
 }
