@@ -1,41 +1,30 @@
-name: Build Flutter APK (Release)
+name: Build APK
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
+      - uses: actions/checkout@v3
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.35.1"
-          channel: stable
-          cache: true
+          flutter-version: '3.19.6' # أو أي نسخة stable
 
-      # أهم خطوة: يعيد تهيئة ملفات android/ الحديثة (Embedding v2 + Gradle حديث)
-      - name: Regenerate Android platform (safe)
-        run: |
-          flutter create .
-          flutter pub get
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Build APK (release, split per ABI)
-        run: flutter build apk --release --split-per-abi -v
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
 
-      - name: Upload APKs
-        uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
         with:
-          name: MAS-APK
-          path: android/app/build/outputs/flutter-apk/*.apk
-          if-no-files-found: warn
+          name: release-apk
+          path: build/app/outputs/flutter-apk/*.apk
